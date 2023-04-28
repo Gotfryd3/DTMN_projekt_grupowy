@@ -1,7 +1,8 @@
 #####
 ##  Basic info
 #
-#https://archive.ics.uci.edu/ml/datasets/Estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition+
+# https://archive.ics.uci.edu/ml/datasets/Estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition+
+# https://www.sciencedirect.com/science/article/pii/S2352340919306985?via%3Dihub
 
 
 #####
@@ -37,4 +38,9 @@ summary(rawDataset)
 # FAF - physical activity frequency
 # TUE - time using technology devices
 # NObeyesdad - type
+
+#####
+##  Preparing data to logistic regression
+#
+preparedData <- rawDataset[-9]
 
