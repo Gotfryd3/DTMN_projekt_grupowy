@@ -13,6 +13,7 @@ library(tidyverse)
 library(caTools)
 library(caret)
 library(ROCR)
+library(corrplot)
 
 #####
 ##  Loading data
@@ -44,20 +45,35 @@ summary(rawData)
 preparedData <- subset(rawData, select = -c(Gender, NObeyesdad, family_history_with_overweight, SMOKE, CALC, CAEC, MTRANS, SCC, FAVC))
 preparedData["Proper_weight"] <-  if_else(rawData$NObeyesdad == "Normal_Weight", 1, 0, missing = 0)
 preparedData["Male"] <-  if_else(rawData$Gender == "Male", 1, 0, missing = 0)
-preparedData["FHWO"] <-  if_else(rawData$family_history_with_overweight == "yes", 1, 0, missing = 0)
-preparedData["CCM"] <-  if_else(rawData$SCC == "yes", 1, 0, missing = 0)
-preparedData["FOCHCF"] <-  if_else(rawData$FAVC == "yes", 1, 0, missing = 0)
+preparedData["FamilyHistoryWithOverveight"] <-  if_else(rawData$family_history_with_overweight == "yes", 1, 0, missing = 0)
+preparedData["CaloriesConsumptionMonitirong"] <-  if_else(rawData$SCC == "yes", 1, 0, missing = 0)
+preparedData["FrequencyOfConsumptionHighCaloriesFood"] <-  if_else(rawData$FAVC == "yes", 1, 0, missing = 0)
 preparedData["CIGARETES"] <-  if_else(rawData$SMOKE == "yes", 1, 0, missing = 0)
-preparedData["COA"] <-  if_else(rawData$CALC == "Frequently", 2, if_else(rawData$CALC == "Sometimes", 1, 0, missing = 0), missing = 0)
-preparedData["COFBM"] <-  if_else(rawData$CAEC == "Always", 4, if_else(rawData$CAEC == "Frequently", 3, if_else(rawData$CAEC == "Sometimes", 2, 1, missing = 1), missing = 1), missing = 1)
-preparedData["COMMUTE"] <-  if_else(rawData$MTRANS == "Automobile", 4, if_else(rawData$MTRANS == "Motorbike", 3, if_else(rawData$MTRANS == "Public_Transportation", 2, 1, missing = 1), missing = 1), missing = 1)
+preparedData["ConsumptionOfAlcohol"] <-  if_else(rawData$CALC == "Frequently", 2, 
+                                                 if_else(rawData$CALC == "Sometimes", 1, 0, missing = 0), missing = 0)
+preparedData["ConsumptionOfFoofBetweenMeals"] <-  if_else(rawData$CAEC == "Always", 4, 
+                                                          if_else(rawData$CAEC == "Frequently", 3, 
+                                                                  if_else(rawData$CAEC == "Sometimes", 2, 1, missing = 1), missing = 1), missing = 1)
+preparedData["COMMUTE"] <-  if_else(rawData$MTRANS == "Automobile", 4, 
+                                    if_else(rawData$MTRANS == "Motorbike", 3, 
+                                            if_else(rawData$MTRANS == "Public_Transportation", 2, 1, missing = 1), missing = 1), missing = 1)
 
 #####
 ##  Type definition of variables
 #
-dataset <- as.data.frame(lapply(preparedData[c("Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE", "Proper_weight", "Male", "FHWO", "CCM", "FOCHCF", "CIGARETES", "COA", "COFBM", "COMMUTE")], as.numeric))
-summary(dataset)
+dataset <- as.data.frame(lapply(preparedData[c("Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE", "Proper_weight", "Male", "FamilyHistoryWithOverveight", 
+                                               "CaloriesConsumptionMonitirong", "FrequencyOfConsumptionHighCaloriesFood", "CIGARETES", "ConsumptionOfAlcohol", 
+                                               "ConsumptionOfFoofBetweenMeals", "COMMUTE")], as.numeric))
 
+#####
+##  Data analise
+#
+summary(dataset)
+print(dataset)
+correlationMatrix <- cor(dataset, method = "pearson")
+colnames(correlationMatrix) <- c("Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE", "Proper_weight", "Male", "FHWO", "CCM", "FOCHCF", "CIGARETES", "COA", "COFBM", "COMMUTE")
+rownames(correlationMatrix) <- c("Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE", "Proper_weight", "Male", "FHWO", "CCM", "FOCHCF", "CIGARETES", "COA", "COFBM", "COMMUTE")
+corrplot(correlationMatrix)
 
 #####
 ##  Data partition
@@ -76,11 +92,13 @@ testDataF  = subset(logicClassFalse, split == FALSE)
 trainData <- rbind(trainDataT, trainDataF)
 testData <- rbind(testDataT, testDataF)
 
+
 #####
-##  First model
+##  First model - simple test
 #
-formula <- Proper_weight ~ Age + Height + Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FHWO + CCM + FOCHCF + CIGARETES + COA + COFBM + COMMUTE
-logistic <- glm(formula, family=binomial(link="logit"), as.data.frame(trainData))
-summary(logistic)
-pred <- predict(logistic, testData)
-t <- table(testData$Proper_weight, pred) 
+formula <- Proper_weight ~ Age + Height + Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FamilyHistoryWithOverveight + CaloriesConsumptionMonitirong + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfAlcohol + ConsumptionOfFoofBetweenMeals + COMMUTE
+model1 <- glm(formula, family=binomial(link="logit"), as.data.frame(trainData))
+summary(model1)
+prediction1 <- predict(model1, testData)
+pred <- ifelse(prediction1 > 0.5, 1, 0)
+table(testData$Proper_weight, pred)
