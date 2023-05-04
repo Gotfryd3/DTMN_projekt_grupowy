@@ -51,12 +51,12 @@ preparedData["FrequencyOfConsumptionHighCaloriesFood"] <-  if_else(rawData$FAVC 
 preparedData["CIGARETES"] <-  if_else(rawData$SMOKE == "yes", 1, 0, missing = 0)
 preparedData["ConsumptionOfAlcohol"] <-  if_else(rawData$CALC == "Frequently", 2, 
                                                  if_else(rawData$CALC == "Sometimes", 1, 0, missing = 0), missing = 0)
-preparedData["ConsumptionOfFoofBetweenMeals"] <-  if_else(rawData$CAEC == "Always", 4, 
-                                                          if_else(rawData$CAEC == "Frequently", 3, 
-                                                                  if_else(rawData$CAEC == "Sometimes", 2, 1, missing = 1), missing = 1), missing = 1)
-preparedData["COMMUTE"] <-  if_else(rawData$MTRANS == "Automobile", 4, 
-                                    if_else(rawData$MTRANS == "Motorbike", 3, 
-                                            if_else(rawData$MTRANS == "Public_Transportation", 2, 1, missing = 1), missing = 1), missing = 1)
+preparedData["ConsumptionOfFoofBetweenMeals"] <-  if_else(rawData$CAEC == "Always", 3, 
+                                                          if_else(rawData$CAEC == "Frequently", 2, 
+                                                                  if_else(rawData$CAEC == "Sometimes", 1, 0, missing = 0), missing = 0), missing = 0)
+preparedData["COMMUTE"] <-  if_else(rawData$MTRANS == "Automobile", 3, 
+                                    if_else(rawData$MTRANS == "Motorbike", 2, 
+                                            if_else(rawData$MTRANS == "Public_Transportation", 1, 0, missing = 0), missing = 0), missing = 0)
 
 #####
 ##  Type definition of variables
@@ -97,7 +97,17 @@ testData <- rbind(testDataT, testDataF)
 ##  First model - simple test
 #
 formula <- Proper_weight ~ Age + Height + Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FamilyHistoryWithOverveight + CaloriesConsumptionMonitirong + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfAlcohol + ConsumptionOfFoofBetweenMeals + COMMUTE
-model1 <- glm(formula, family=binomial(link="logit"), as.data.frame(trainData))
+model1 <- glm(formula, family=quasibinomial(link="logit"), as.data.frame(trainData))
+summary(model1)
+prediction1 <- predict(model1, testData)
+pred <- ifelse(prediction1 > 0.5, 1, 0)
+table(testData$Proper_weight, pred)
+
+#####
+##  Reduction of input variables using correlation plot and test p-val
+#
+formula <- Proper_weight ~ Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfFoofBetweenMeals + COMMUTE
+model1 <- glm(formula, family=quasibinomial(link="logit"), as.data.frame(trainData))
 summary(model1)
 prediction1 <- predict(model1, testData)
 pred <- ifelse(prediction1 > 0.5, 1, 0)
