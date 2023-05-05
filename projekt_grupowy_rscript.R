@@ -104,11 +104,54 @@ pred <- ifelse(prediction1 > 0.5, 1, 0)
 table(testData$Proper_weight, pred)
 
 #####
+##  Diagnostics plots of model no. 1
+#
+plot(residuals.glm(model1, type="response"))
+
+#####
 ##  Reduction of input variables using correlation plot and test p-val
 #
-formula <- Proper_weight ~ Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfFoofBetweenMeals + COMMUTE
-model1 <- glm(formula, family=quasibinomial(link="logit"), as.data.frame(trainData))
-summary(model1)
-prediction1 <- predict(model1, testData)
-pred <- ifelse(prediction1 > 0.5, 1, 0)
-table(testData$Proper_weight, pred)
+formula2 <- Proper_weight ~ Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfFoofBetweenMeals + COMMUTE
+model2 <- glm(formula2, family=binomial(link="logit"), as.data.frame(trainData))
+summary(model2)
+prediction2 <- predict(model2, testData)
+pred2 <- ifelse(prediction2 > 0.5, 1, 0)
+table(testData$Proper_weight, pred2)
+
+#####
+##  Influence variables removal
+#
+cookeDistance <- cooks.distance(model2)
+plot(cookeDistance)
+influential <- as.numeric(names(sort(cookeDistance, decreasing = TRUE)[1:10]))
+trainDataI <- trainData[-influential,]
+
+#####
+##  Reduction of input observations using Cooke distance
+#
+formula3 <- Proper_weight ~ Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfFoofBetweenMeals + COMMUTE
+model3 <- glm(formula3, family=binomial(link="logit"), as.data.frame(trainDataI))
+summary(model3)
+prediction3 <- predict(model2, testData)
+pred3 <- ifelse(prediction3 > 0.5, 1, 0)
+table(testData$Proper_weight, pred3)
+
+#####
+##  Reduction of input variables using test p-val
+#
+formula4 <- Proper_weight ~ Weight + FCVC + FAF + TUE + Male + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfFoofBetweenMeals + COMMUTE
+model4 <- glm(formula4, family=binomial(link="logit"), as.data.frame(trainDataI))
+summary(model4)
+prediction4 <- predict(model4, testData)
+pred4 <- ifelse(prediction4 > 0.5, 1, 0)
+table(testData$Proper_weight, pred4)
+
+#####
+##  Diagnostics plots of model no. 4
+#
+plot(residuals.glm(model4, type="response"))
+
+#####
+##  Commentary section
+#
+# Liczba zmiennych została ograniczona z 17 do 9. Mimo to performacne modelu wzrósł - mniej błedów 2-giego rodzaju.
