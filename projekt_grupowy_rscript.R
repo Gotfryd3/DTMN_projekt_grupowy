@@ -93,7 +93,9 @@ testData <- rbind(testDataT, testDataF)
 ##  First model - simple test
 #####
 #
-formula <- Proper_weight ~ Age + Height + Weight + FCVC + NCP + CH2O + FAF + TUE + Male + FamilyHistoryWithOverveight + CaloriesConsumptionMonitirong + FrequencyOfConsumptionHighCaloriesFood + CIGARETES + ConsumptionOfAlcohol + ConsumptionOfFoofBetweenMeals + COMMUTE
+formula <- Proper_weight ~ Age + Height + Weight + FCVC + NCP + CH2O + FAF + TUE + Male + 
+            FamilyHistoryWithOverveight + CaloriesConsumptionMonitirong + FrequencyOfConsumptionHighCaloriesFood + 
+            CIGARETES + ConsumptionOfAlcohol + ConsumptionOfFoofBetweenMeals + COMMUTE
 model1 <- glm(formula, family=quasibinomial(link="logit"), as.data.frame(trainData))
 summary(model1)
 prediction1 <- predict(model1, testData)
